@@ -1,0 +1,21 @@
+{
+  "name": "flip-the-rule",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "2D physics puzzle platformer - flip gravity to navigate floating islands",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "terser": "^5.39.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.0"
+  },
+  "license": "MIT"
+}
