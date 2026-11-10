@@ -11,7 +11,7 @@ export class SaveSystem {
   private getDefaultSaveData(): SaveData {
     return {
       version: SAVE_VERSION,
-      unlockedLevel: TOTAL_LEVELS,
+      unlockedLevel: 1,
       stars: {},
       bestScores: {},
       bestTimes: {},
@@ -41,7 +41,10 @@ export class SaveSystem {
       }
 
       const defaultData = this.getDefaultSaveData();
-      const unlockedLevel = Math.max(parsed.unlockedLevel ?? 1, TOTAL_LEVELS);
+      const unlockedLevel = Math.min(
+        Math.max(parsed.unlockedLevel ?? 1, 1),
+        TOTAL_LEVELS
+      );
 
       return {
         ...defaultData,
@@ -76,8 +79,9 @@ export class SaveSystem {
   }
 
   public unlockLevel(level: number): void {
-    if (level > this.saveData.unlockedLevel) {
-      this.saveData.unlockedLevel = level;
+    const nextUnlocked = Math.min(Math.max(level, 1), TOTAL_LEVELS);
+    if (nextUnlocked > this.saveData.unlockedLevel) {
+      this.saveData.unlockedLevel = nextUnlocked;
       this.save();
     }
   }
