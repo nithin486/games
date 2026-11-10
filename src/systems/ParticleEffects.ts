@@ -11,8 +11,8 @@ export function gravityFlipEffect(
   const flash = scene.add.graphics();
   flash.setDepth(DEPTH.OVERLAY - 1);
   flash.setScrollFactor(0);
-  const flashColor = direction === 'UP' ? COLORS.NEON_CYAN : COLORS.PRIMARY_PURPLE;
-  flash.fillStyle(flashColor, 0.22);
+  const flashColor = COLORS.PRIMARY_PURPLE;
+  flash.fillStyle(flashColor, 0.12);
   flash.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
   scene.tweens.add({
@@ -25,27 +25,7 @@ export function gravityFlipEffect(
     },
   });
 
-  // Horizontal line sweep
-  const sweep = scene.add.graphics();
-  sweep.setDepth(DEPTH.PARTICLES);
-  sweep.setScrollFactor(0);
-  sweep.lineStyle(3, flashColor, 0.8);
-  sweep.lineBetween(0, 0, GAME_WIDTH, 0);
-
-  const startY = direction === 'UP' ? GAME_HEIGHT : 0;
-  const targetY = direction === 'UP' ? 0 : GAME_HEIGHT;
-  sweep.y = startY;
-
-  scene.tweens.add({
-    targets: sweep,
-    y: targetY,
-    alpha: 0,
-    duration: 220,
-    ease: 'Cubic.easeOut',
-    onComplete: () => {
-      sweep.destroy();
-    },
-  });
+  // Keep the flip effect subtle and clean without drawing a harsh horizontal sweep line.
 }
 
 export function starCollectEffect(

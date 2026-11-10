@@ -31,6 +31,8 @@ import { TouchControls } from '../ui/TouchControls';
 export class GameplayScene extends Phaser.Scene {
   public player!: Player;
   public platforms!: Phaser.Physics.Arcade.StaticGroup;
+  public movingPlatforms!: Phaser.Physics.Arcade.StaticGroup;
+  public movingWalls!: Phaser.Physics.Arcade.StaticGroup;
   public hazards!: Phaser.Physics.Arcade.StaticGroup;
   public collectible: Collectible | null = null;
   public portal!: Portal;
@@ -77,7 +79,7 @@ export class GameplayScene extends Phaser.Scene {
     // 4. Add floating clouds
     this.createDecorations(worldW, worldH);
 
-    // 5. Create platforms & hazards
+    // 5. Create platforms, moving platforms & hazards
     this.platforms = createPlatforms(this, this.levelData.platforms, worldIndex);
     this.hazards = createHazards(this, this.levelData.hazards);
 
@@ -104,12 +106,15 @@ export class GameplayScene extends Phaser.Scene {
       this.platforms,
       this.hazards,
       this.collectible,
-      this.portal
+      this.portal,
+      this.movingPlatforms,
+      this.movingWalls,
+      this.levelData.portalPairs ?? []
     );
     this.collisionSystem.setupCollisions();
 
     // 10. Create HUD & Touch Controls
-    this.hud = new HUD(this, this.levelId, this.levelData.name);
+    this.hud = new HUD(this, this.levelId, this.levelData.name, this.levelData.flipTarget);
     this.touchControls = new TouchControls(this, this.inputSystem);
 
     // 11. Setup event listeners
@@ -150,12 +155,16 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     // Handle gravity flip
-    if (input.flip) {
+    if (input.flip && this.gravitySystem.canFlip()) {
       const success = this.gravitySystem.flip();
       if (success) {
         const direction = this.gravitySystem.getDirection();
         this.player.onGravityFlip(direction);
         gravityFlipEffect(this, direction);
+
+        if (this.gravitySystem.getFlipCount() > this.levelData.flipTarget) {
+          this.handleDeath();
+        }
       }
     }
 
@@ -174,6 +183,7 @@ export class GameplayScene extends Phaser.Scene {
     // Update timer
     this.elapsedTime = Math.floor((this.time.now - this.startTime) / 1000);
     this.hud.updateTime(this.elapsedTime);
+    this.hud.updateChallengeStatus(this.getRunStatusLabel());
 
     this.player.update();
   }
@@ -200,6 +210,17 @@ export class GameplayScene extends Phaser.Scene {
     if (this.hud) {
       this.hud.showStarCollected();
     }
+  }
+
+  private getRunStatusLabel(): string {
+    const flips = this.gravitySystem.getFlipCount();
+    const underFlipTarget = flips <= this.levelData.flipTarget;
+    const underTimeTarget = this.elapsedTime <= this.levelData.timeTarget;
+
+    if (underFlipTarget && underTimeTarget) return 'Perfect Route';
+    if (underFlipTarget) return 'Clean Control';
+    if (underTimeTarget) return 'Speed Rush';
+    return 'Chaos Loop';
   }
 
   public handleLevelComplete(): void {
@@ -257,6 +278,18 @@ export class GameplayScene extends Phaser.Scene {
       1
     );
     this.background.fillRect(0, 0, width, height);
+
+    const glowA = this.add.graphics();
+    glowA.fillStyle(theme.accent, 0.12);
+    glowA.fillCircle(width * 0.25, height * 0.25, 180);
+    const glowB = this.add.graphics();
+    glowB.fillStyle(0x67e8f9, 0.08);
+    glowB.fillCircle(width * 0.76, height * 0.3, 200);
+
+    const vignette = this.add.graphics();
+    vignette.fillStyle(0x020617, 0.18);
+    vignette.fillRect(0, 0, width, height);
+    vignette.setDepth(DEPTH.BACKGROUND + 1);
   }
 
   private createDecorations(worldW: number, worldH: number): void {
@@ -299,6 +332,12 @@ export class GameplayScene extends Phaser.Scene {
 
     if (this.collisionSystem) {
       this.collisionSystem.destroy();
+    }
+    if (this.movingPlatforms) {
+      this.movingPlatforms.destroy(true);
+    }
+    if (this.movingWalls) {
+      this.movingWalls.destroy(true);
     }
     if (this.inputSystem) {
       this.inputSystem.destroy();

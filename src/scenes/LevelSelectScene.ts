@@ -15,15 +15,25 @@ export class LevelSelectScene extends Phaser.Scene {
   }
 
   create(): void {
-    // 1. Background gradient
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0x130a24, 0x130a24, 0x091224, 0x091224, 1);
+    bg.fillGradientStyle(0x120b22, 0x120b22, 0x091624, 0x091624, 1);
     bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // Decorative subtle clouds in background
+    const glowA = this.add.graphics();
+    glowA.fillStyle(0x7c3aed, 0.17);
+    glowA.fillCircle(220, 160, 220);
+    const glowB = this.add.graphics();
+    glowB.fillStyle(0x06b6d4, 0.12);
+    glowB.fillCircle(760, 200, 210);
+
+    const panel = this.add.graphics();
+    panel.fillStyle(0x0f172a, 0.28);
+    panel.fillRoundedRect(80, 130, GAME_WIDTH - 160, 330, 28);
+    panel.lineStyle(2, 0x7dd3fc, 0.35);
+    panel.strokeRoundedRect(80, 130, GAME_WIDTH - 160, 330, 28);
+
     this.createBackgroundClouds();
 
-    // 2. 'SELECT LEVEL' title
     this.add.text(GAME_WIDTH / 2, 45, 'SELECT LEVEL', {
       fontFamily: FONTS.HEADING,
       fontSize: '36px',
@@ -100,13 +110,15 @@ export class LevelSelectScene extends Phaser.Scene {
       const tab = this.add.container(x, tabY);
 
       const bg = this.add.graphics();
-      bg.fillStyle(isActive ? accent : 0x1e293b, 1);
+      bg.fillStyle(isActive ? accent : 0x111827, 1);
       bg.fillRoundedRect(-tabWidth / 2, -tabHeight / 2, tabWidth, tabHeight, 10);
+      bg.fillStyle(isActive ? 0xffffff : 0x334155, 0.12);
+      bg.fillRoundedRect(-tabWidth / 2 + 4, -tabHeight / 2 + 3, tabWidth - 8, tabHeight * 0.4, 8);
       if (isActive) {
-        bg.lineStyle(2, 0xffffff, 0.85);
+        bg.lineStyle(2, 0xffffff, 0.9);
         bg.strokeRoundedRect(-tabWidth / 2, -tabHeight / 2, tabWidth, tabHeight, 10);
       } else {
-        bg.lineStyle(1, 0x475569, 0.7);
+        bg.lineStyle(1, 0x475569, 0.8);
         bg.strokeRoundedRect(-tabWidth / 2, -tabHeight / 2, tabWidth, tabHeight, 10);
       }
       tab.add(bg);
@@ -122,18 +134,34 @@ export class LevelSelectScene extends Phaser.Scene {
       tab.add(label);
 
       tab.setSize(tabWidth, tabHeight);
-      tab.setInteractive(
-        new Phaser.Geom.Rectangle(-tabWidth / 2, -tabHeight / 2, tabWidth, tabHeight),
-        Phaser.Geom.Rectangle.Contains
-      );
+      const hitBox = this.add.graphics();
+      hitBox.fillStyle(0x000000, 0);
+      hitBox.fillRoundedRect(-tabWidth / 2, -tabHeight / 2, tabWidth, tabHeight, 10);
+      hitBox.setInteractive({
+        hitArea: new Phaser.Geom.Rectangle(-tabWidth / 2, -tabHeight / 2, tabWidth, tabHeight),
+        hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+        useHandCursor: true,
+      });
+      tab.add(hitBox);
 
       const targetIdx = i;
-      tab.on('pointerdown', () => {
-        if (this.currentWorldIndex !== targetIdx) {
+      let isPressed = false;
+
+      hitBox.on('pointerdown', () => {
+        isPressed = true;
+      });
+
+      hitBox.on('pointerup', () => {
+        if (isPressed && this.currentWorldIndex !== targetIdx) {
           this.currentWorldIndex = targetIdx;
           this.renderWorldTabs();
           this.renderLevelGrid();
         }
+        isPressed = false;
+      });
+
+      hitBox.on('pointerupoutside', () => {
+        isPressed = false;
       });
 
       this.tabsContainer.add(tab);
@@ -211,9 +239,11 @@ export class LevelSelectScene extends Phaser.Scene {
     const bg = this.add.graphics();
 
     if (isUnlocked) {
-      bg.fillStyle(0x1e1b4b, 0.95);
+      bg.fillStyle(0x111827, 0.96);
       bg.fillRoundedRect(-half, -half, size, size, 14);
-      bg.lineStyle(2, accentColor, 0.85);
+      bg.fillStyle(accentColor, 0.14);
+      bg.fillRoundedRect(-half + 2, -half + 2, size - 4, size - 4, 12);
+      bg.lineStyle(2, accentColor, 0.9);
       bg.strokeRoundedRect(-half, -half, size, size, 14);
       container.add(bg);
 
@@ -242,14 +272,21 @@ export class LevelSelectScene extends Phaser.Scene {
         container.add(star);
       }
 
-      // Interactive behavior
       container.setSize(size, size);
-      container.setInteractive(
-        new Phaser.Geom.Rectangle(-half, -half, size, size),
-        Phaser.Geom.Rectangle.Contains
-      );
+      const hitBox = this.add.graphics();
+      hitBox.fillStyle(0x000000, 0);
+      hitBox.fillRoundedRect(-size / 2, -size / 2, size, size, 14);
+      hitBox.setInteractive({
+        hitArea: new Phaser.Geom.Rectangle(-size / 2, -size / 2, size, size),
+        hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+        useHandCursor: true,
+      });
+      container.add(hitBox);
 
-      container.on('pointerover', () => {
+      let isPressed = false;
+
+      hitBox.on('pointerover', () => {
+        if (isPressed) return;
         this.tweens.add({
           targets: container,
           scaleX: 1.08,
@@ -259,17 +296,20 @@ export class LevelSelectScene extends Phaser.Scene {
         });
       });
 
-      container.on('pointerout', () => {
-        this.tweens.add({
-          targets: container,
-          scaleX: 1.0,
-          scaleY: 1.0,
-          duration: 100,
-          ease: 'Quad.easeOut',
-        });
+      hitBox.on('pointerout', () => {
+        if (!isPressed) {
+          this.tweens.add({
+            targets: container,
+            scaleX: 1.0,
+            scaleY: 1.0,
+            duration: 100,
+            ease: 'Quad.easeOut',
+          });
+        }
       });
 
-      container.on('pointerdown', () => {
+      hitBox.on('pointerdown', () => {
+        isPressed = true;
         this.tweens.add({
           targets: container,
           scaleX: 0.94,
@@ -279,8 +319,22 @@ export class LevelSelectScene extends Phaser.Scene {
         });
       });
 
-      container.on('pointerup', () => {
-        this.scene.start(SCENES.GAMEPLAY, { levelId });
+      hitBox.on('pointerup', () => {
+        if (isPressed) {
+          this.scene.start(SCENES.GAMEPLAY, { levelId });
+        }
+        isPressed = false;
+      });
+
+      hitBox.on('pointerupoutside', () => {
+        isPressed = false;
+        this.tweens.add({
+          targets: container,
+          scaleX: 1.0,
+          scaleY: 1.0,
+          duration: 100,
+          ease: 'Quad.easeOut',
+        });
       });
     } else {
       // Locked level cell

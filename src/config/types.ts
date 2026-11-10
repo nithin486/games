@@ -18,10 +18,15 @@ export interface PlatformData {
 }
 
 export interface HazardData {
-  type: 'spike';
+  type: 'spike' | 'pulse';
   x: number;
   y: number;
-  direction: 'up' | 'down' | 'left' | 'right';
+  direction?: 'up' | 'down' | 'left' | 'right';
+  width?: number;
+  height?: number;
+  phase?: number;
+  activeTime?: number;
+  inactiveTime?: number;
 }
 
 export interface MovingHazardData {

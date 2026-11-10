@@ -40,6 +40,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   public onGravityFlip(direction: GravityDirection): void {
     if (!this.isAlive) return;
+
+    this.body.setAccelerationX(0);
+    this.body.setVelocityX(0);
+    this.body.setVelocityY(Phaser.Math.Clamp(this.body.velocity.y, -200, 200));
+    this.body.setAccelerationY(0);
+    this.body.blocked.down = false;
+    this.body.blocked.up = false;
+    this.body.touching.down = false;
+    this.body.touching.up = false;
+
     this.setFlipY(direction === 'UP');
 
     this.scene.tweens.killTweensOf(this);

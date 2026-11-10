@@ -7,6 +7,7 @@ export class GravitySystem {
   private direction: GravityDirection = 'DOWN';
   private cooldownTimer: number = 0;
   private flipCount: number = 0;
+  private gravityTarget: number = PHYSICS.GRAVITY_ACCELERATION;
 
   constructor(private scene: Phaser.Scene) {}
 
@@ -17,14 +18,20 @@ export class GravitySystem {
   public flip(): boolean {
     if (!this.canFlip()) return false;
 
+    const player = (this.scene as Phaser.Scene & { player?: { body?: Phaser.Physics.Arcade.Body } }).player;
+    if (player?.body) {
+      player.body.blocked.down = false;
+      player.body.blocked.up = false;
+      player.body.touching.down = false;
+      player.body.touching.up = false;
+    }
+
     this.direction = this.direction === 'DOWN' ? 'UP' : 'DOWN';
     this.flipCount++;
-
-    const gravityY =
+    this.gravityTarget =
       this.direction === 'DOWN'
         ? PHYSICS.GRAVITY_ACCELERATION
         : -PHYSICS.GRAVITY_ACCELERATION;
-    this.scene.physics.world.gravity.y = gravityY;
 
     this.cooldownTimer = PHYSICS.FLIP_COOLDOWN;
 
@@ -38,6 +45,14 @@ export class GravitySystem {
     if (this.cooldownTimer > 0) {
       this.cooldownTimer -= delta;
     }
+
+    const currentGravity = this.scene.physics.world.gravity.y;
+    const smoothing = Phaser.Math.Clamp(delta / 120, 0.18, 0.5);
+    const nextGravity = Phaser.Math.Linear(currentGravity, this.gravityTarget, smoothing);
+    this.scene.physics.world.gravity.y = nextGravity;
+
+    const clampedGravity = Phaser.Math.Clamp(this.scene.physics.world.gravity.y, -PHYSICS.GRAVITY_ACCELERATION, PHYSICS.GRAVITY_ACCELERATION);
+    this.scene.physics.world.gravity.y = clampedGravity;
   }
 
   public getDirection(): GravityDirection {
@@ -52,12 +67,11 @@ export class GravitySystem {
     this.direction = initialDirection;
     this.cooldownTimer = 0;
     this.flipCount = 0;
-
-    const gravityY =
+    this.gravityTarget =
       this.direction === 'DOWN'
         ? PHYSICS.GRAVITY_ACCELERATION
         : -PHYSICS.GRAVITY_ACCELERATION;
-    this.scene.physics.world.gravity.y = gravityY;
+    this.scene.physics.world.gravity.y = this.gravityTarget;
 
     this.scene.events.emit(EVENTS.FLIP_COUNT_CHANGED, this.flipCount);
   }

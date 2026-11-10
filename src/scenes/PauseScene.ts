@@ -27,17 +27,22 @@ export class PauseScene extends Phaser.Scene {
   }
 
   create(): void {
-    // 1. Semi-transparent dark overlay covering full screen
     const overlay = this.add.graphics();
-    overlay.fillStyle(0x0b0b1a, 0.78);
+    overlay.fillStyle(0x070b18, 0.7);
     overlay.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // Subtle decorative center panel
+    const glowA = this.add.graphics();
+    glowA.fillStyle(0x7c3aed, 0.16);
+    glowA.fillCircle(250, 150, 180);
+    const glowB = this.add.graphics();
+    glowB.fillStyle(0x22d3ee, 0.12);
+    glowB.fillCircle(720, 320, 180);
+
     const panel = this.add.graphics();
-    panel.fillStyle(0x1e1b4b, 0.85);
-    panel.fillRoundedRect(GAME_WIDTH / 2 - 180, 70, 360, 400, 16);
-    panel.lineStyle(2, COLORS.PRIMARY_PURPLE, 0.6);
-    panel.strokeRoundedRect(GAME_WIDTH / 2 - 180, 70, 360, 400, 16);
+    panel.fillStyle(0x111827, 0.7);
+    panel.fillRoundedRect(GAME_WIDTH / 2 - 180, 70, 360, 400, 20);
+    panel.lineStyle(2, 0x7dd3fc, 0.45);
+    panel.strokeRoundedRect(GAME_WIDTH / 2 - 180, 70, 360, 400, 20);
 
     // 2. 'PAUSED' title
     this.add.text(GAME_WIDTH / 2, 120, 'PAUSED', {

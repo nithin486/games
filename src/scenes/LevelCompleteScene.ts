@@ -23,20 +23,24 @@ export class LevelCompleteScene extends Phaser.Scene {
   }
 
   create(): void {
-    // 1. Gradient celebration background
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0x1a0f30, 0x1a0f30, 0x0a192f, 0x0a192f, 1);
+    bg.fillGradientStyle(0x120a24, 0x120a24, 0x091a2d, 0x091a2d, 1);
     bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // 9. Confetti particle celebration effect
+    const glowA = this.add.graphics();
+    glowA.fillStyle(0xfbbf24, 0.14);
+    glowA.fillCircle(260, 110, 180);
+    const glowB = this.add.graphics();
+    glowB.fillStyle(0x7c3aed, 0.16);
+    glowB.fillCircle(700, 170, 220);
+
     this.createConfetti();
 
-    // Central card panel
     const panel = this.add.graphics();
-    panel.fillStyle(0x13122c, 0.9);
-    panel.fillRoundedRect(GAME_WIDTH / 2 - 250, 40, 500, 460, 20);
-    panel.lineStyle(2, COLORS.PRIMARY_PURPLE, 0.7);
-    panel.strokeRoundedRect(GAME_WIDTH / 2 - 250, 40, 500, 460, 20);
+    panel.fillStyle(0x111827, 0.72);
+    panel.fillRoundedRect(GAME_WIDTH / 2 - 250, 40, 500, 460, 22);
+    panel.lineStyle(2, 0xfbbf24, 0.5);
+    panel.strokeRoundedRect(GAME_WIDTH / 2 - 250, 40, 500, 460, 22);
 
     // 2. Celebration Title
     const title = this.add.text(GAME_WIDTH / 2, 85, 'LEVEL COMPLETE!', {
@@ -147,7 +151,7 @@ export class LevelCompleteScene extends Phaser.Scene {
     box.lineStyle(1, 0x334155, 0.8);
     box.strokeRoundedRect(GAME_WIDTH / 2 - 200, statsY, 400, 115, 12);
 
-    const timeFormatted = `${(this.result.time / 1000).toFixed(1)}s`;
+    const timeFormatted = `${this.result.time.toFixed(1)}s`;
     const targetTimeFormatted = this.levelData?.timeTarget ? `${this.levelData.timeTarget}s` : '-';
     const targetFlipsFormatted = this.levelData?.flipTarget ? `${this.levelData.flipTarget}` : '-';
 

@@ -10,12 +10,17 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   create(): void {
-    // 1. Background gradient
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0x130a24, 0x130a24, 0x0a1428, 0x0a1428, 1);
+    bg.fillGradientStyle(0x120b24, 0x120b24, 0x091827, 0x091827, 1);
     bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // 2. 'SETTINGS' title
+    const glowA = this.add.graphics();
+    glowA.fillStyle(0x7c3aed, 0.18);
+    glowA.fillCircle(180, 150, 220);
+    const glowB = this.add.graphics();
+    glowB.fillStyle(0x22d3ee, 0.12);
+    glowB.fillCircle(820, 240, 200);
+
     this.add.text(GAME_WIDTH / 2, 50, 'SETTINGS', {
       fontFamily: FONTS.HEADING,
       fontSize: '40px',
@@ -38,12 +43,11 @@ export class SettingsScene extends Phaser.Scene {
       { fontSize: '20px' }
     );
 
-    // Settings card background
     const card = this.add.graphics();
-    card.fillStyle(0x13122c, 0.9);
-    card.fillRoundedRect(GAME_WIDTH / 2 - 280, 95, 560, 395, 16);
-    card.lineStyle(2, COLORS.PRIMARY_PURPLE, 0.6);
-    card.strokeRoundedRect(GAME_WIDTH / 2 - 280, 95, 560, 395, 16);
+    card.fillStyle(0x111827, 0.6);
+    card.fillRoundedRect(GAME_WIDTH / 2 - 280, 95, 560, 395, 18);
+    card.lineStyle(2, 0x7dd3fc, 0.45);
+    card.strokeRoundedRect(GAME_WIDTH / 2 - 280, 95, 560, 395, 18);
 
     // Current settings
     const settings = saveSystem.getSettings();
@@ -104,12 +108,31 @@ export class SettingsScene extends Phaser.Scene {
         fontStyle: 'bold',
       }).setOrigin(0.5);
       container.add(txt);
-      container.setSize(60, 30);
-      container.setInteractive(new Phaser.Geom.Rectangle(-30, -15, 60, 30), Phaser.Geom.Rectangle.Contains);
-      container.on('pointerdown', () => {
-        saveSystem.setDifficulty(diff);
-        // refresh UI by restarting settings scene
-        this.scene.restart();
+      const hitBox = this.add.graphics();
+      hitBox.fillStyle(0x000000, 0);
+      hitBox.fillRoundedRect(-30, -15, 60, 30, 12);
+      hitBox.setInteractive({
+        hitArea: new Phaser.Geom.Rectangle(-30, -15, 60, 30),
+        hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+        useHandCursor: true,
+      });
+      container.add(hitBox);
+
+      let isPressed = false;
+      hitBox.on('pointerdown', () => {
+        isPressed = true;
+      });
+
+      hitBox.on('pointerup', () => {
+        if (isPressed) {
+          saveSystem.setDifficulty(diff);
+          this.scene.restart();
+        }
+        isPressed = false;
+      });
+
+      hitBox.on('pointerupoutside', () => {
+        isPressed = false;
       });
     });
 
@@ -160,12 +183,27 @@ export class SettingsScene extends Phaser.Scene {
     container.add(text);
 
     container.setSize(btnWidth, btnHeight);
-    container.setInteractive(
-      new Phaser.Geom.Rectangle(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight),
-      Phaser.Geom.Rectangle.Contains
-    );
+    const hitBox = this.add.graphics();
+    hitBox.fillStyle(0x000000, 0);
+    hitBox.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 18);
+    hitBox.setInteractive({
+      hitArea: new Phaser.Geom.Rectangle(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight),
+      hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+      useHandCursor: true,
+    });
+    container.add(hitBox);
 
-    container.on('pointerdown', () => {
+    let isPressed = false;
+    hitBox.on('pointerdown', () => {
+      isPressed = true;
+    });
+
+    hitBox.on('pointerup', () => {
+      if (!isPressed) {
+        return;
+      }
+      isPressed = false;
+
       state = !state;
       text.setText(state ? 'ON' : 'OFF');
       updateButtonGfx();
@@ -182,11 +220,15 @@ export class SettingsScene extends Phaser.Scene {
       onToggle(state);
     });
 
-    container.on('pointerover', () => {
+    hitBox.on('pointerupoutside', () => {
+      isPressed = false;
+    });
+
+    hitBox.on('pointerover', () => {
       container.setScale(1.05);
     });
 
-    container.on('pointerout', () => {
+    hitBox.on('pointerout', () => {
       container.setScale(1.0);
     });
   }

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { PHYSICS } from '../config/gameConfig';
 import { InputState } from '../config/types';
 
 interface WasdKeys {
@@ -29,6 +30,12 @@ export class InputSystem {
   private touchRestart: boolean = false;
   private touchPause: boolean = false;
 
+  private spaceWasDown: boolean = false;
+  private upWasDown: boolean = false;
+  private wWasDown: boolean = false;
+  private touchFlipHeld: boolean = false;
+  private lastFlipTime: number = 0;
+
   constructor(private scene: Phaser.Scene) {
     if (this.scene.input && this.scene.input.keyboard) {
       this.cursors = this.scene.input.keyboard.createCursorKeys();
@@ -50,14 +57,28 @@ export class InputSystem {
     const rightKeyboard =
       (this.cursors?.right.isDown ?? false) || (this.wasd?.D.isDown ?? false);
 
-    const spaceJustDown = this.space ? Phaser.Input.Keyboard.JustDown(this.space) : false;
-    const upJustDown = this.cursors ? Phaser.Input.Keyboard.JustDown(this.cursors.up) : false;
-    const wJustDown = this.wasd ? Phaser.Input.Keyboard.JustDown(this.wasd.W) : false;
+    const spacePressed = this.space?.isDown ?? false;
+    const upPressed = this.cursors?.up.isDown ?? false;
+    const wPressed = this.wasd?.W.isDown ?? false;
+
+    const spaceJustDown = spacePressed && !this.spaceWasDown;
+    const upJustDown = upPressed && !this.upWasDown;
+    const wJustDown = wPressed && !this.wWasDown;
 
     const rJustDown = this.rKey ? Phaser.Input.Keyboard.JustDown(this.rKey) : false;
     const escJustDown = this.escKey ? Phaser.Input.Keyboard.JustDown(this.escKey) : false;
 
-    const flipTriggered = spaceJustDown || upJustDown || wJustDown || this.touchFlip;
+    const now = this.scene.time.now;
+    const keyboardFlipPressed = spaceJustDown || upJustDown || wJustDown;
+    const touchFlipPressed = this.touchFlip && !this.touchFlipHeld;
+
+    const canStartNewFlip = now - this.lastFlipTime >= PHYSICS.FLIP_COOLDOWN;
+    const flipTriggered = canStartNewFlip && (keyboardFlipPressed || touchFlipPressed);
+
+    if (flipTriggered) {
+      this.lastFlipTime = now;
+    }
+
     const restartTriggered = rJustDown || this.touchRestart;
     const pauseTriggered = escJustDown || this.touchPause;
 
@@ -69,7 +90,11 @@ export class InputSystem {
       pause: pauseTriggered,
     };
 
-    // Consume one-frame touch triggers
+    this.spaceWasDown = spacePressed;
+    this.upWasDown = upPressed;
+    this.wWasDown = wPressed;
+    this.touchFlipHeld = this.touchFlip;
+
     this.touchFlip = false;
     this.touchRestart = false;
     this.touchPause = false;

@@ -27,6 +27,8 @@ export const ASSETS = {
   PARTICLE: 'particle',
   PARTICLE_STAR: 'particle-star',
   MOVING_PLATFORM: 'moving-platform',
+  MOVING_HAZARD: 'moving-hazard',
+  PULSE_WALL: 'pulse-wall',
   SWITCH_OFF: 'switch-off',
   SWITCH_ON: 'switch-on',
   CLOUD: 'cloud',

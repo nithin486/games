@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { MovingPlatformData } from '../config/types';
-import { GAME_WIDTH } from '../config/gameConfig';
+import { ASSETS, DEPTH } from '../config/constants';
+import { MovingHazardData, MovingPlatformData } from '../config/types';
+import { GAME_WIDTH, WORLD_THEMES } from '../config/gameConfig';
 
 /**
  * MovingPlatform moves along a predefined path (linear or sinusoidal).
@@ -19,7 +20,8 @@ export class MovingPlatform extends Phaser.Physics.Arcade.Sprite {
     x: number,
     y: number,
     texture: string,
-    data: MovingPlatformData
+    data: MovingPlatformData,
+    tint?: number
   ) {
     super(scene, x, y, texture);
     scene.add.existing(this);
@@ -29,14 +31,25 @@ export class MovingPlatform extends Phaser.Physics.Arcade.Sprite {
     if (this.body && (this.body as any).setAllowGravity) {
       (this.body as any).setAllowGravity(false);
     } else if (this.body) {
-      // fallback if method unavailable
       (this.body as any).allowGravity = false;
+    }
+    if (this.body && (this.body as any).setImmovable) {
+      (this.body as any).setImmovable(true);
     }
     this.path = data.path;
     this.speed = data.speed;
     this.pauseDuration = data.pauseDuration;
     this.setDisplaySize(data.width, data.height);
     this.setOrigin(0.5, 0.5);
+    if (this.body) {
+      const body = this.body as Phaser.Physics.Arcade.Body;
+      body.setSize(data.width, data.height);
+      body.setOffset(-data.width / 2, -data.height / 2);
+      body.updateFromGameObject();
+    }
+    if (typeof tint === 'number') {
+      this.setTint(tint);
+    }
   }
 
   update(delta: number): void {
@@ -78,7 +91,10 @@ export class MovingPlatform extends Phaser.Physics.Arcade.Sprite {
     this.x += moveX;
     this.y += moveY;
     if (this.body) {
-      (this.body as Phaser.Physics.Arcade.Body).reset(this.x, this.y);
+      const body = this.body as Phaser.Physics.Arcade.Body;
+      body.setVelocity(0, 0);
+      body.reset(this.x, this.y);
+      body.updateFromGameObject();
     }
   }
 }
@@ -88,18 +104,55 @@ export class MovingPlatform extends Phaser.Physics.Arcade.Sprite {
  */
 export function createMovingPlatforms(
   scene: Phaser.Scene,
-  platforms: MovingPlatformData[]
+  platforms: MovingPlatformData[],
+  worldIndex = 0
 ): Phaser.Physics.Arcade.StaticGroup {
   const group = scene.physics.add.staticGroup();
+  const theme = WORLD_THEMES[Math.max(0, Math.min(worldIndex, WORLD_THEMES.length - 1))] ?? WORLD_THEMES[0];
+
   platforms.forEach((data) => {
     const mp = new MovingPlatform(
       scene,
       data.x,
       data.y,
-      'platform', // assumes a platform texture key exists
-      data
+      'platform',
+      data,
+      theme.platformFill
     );
     group.add(mp);
   });
+  return group;
+}
+
+export function createMovingHazards(
+  scene: Phaser.Scene,
+  hazards: MovingHazardData[],
+  worldIndex = 0
+): Phaser.Physics.Arcade.StaticGroup {
+  const group = scene.physics.add.staticGroup();
+  const theme = WORLD_THEMES[Math.max(0, Math.min(worldIndex, WORLD_THEMES.length - 1))] ?? WORLD_THEMES[0];
+
+  hazards.forEach((data) => {
+    const wall = new MovingPlatform(
+      scene,
+      data.x,
+      data.y,
+      ASSETS.MOVING_HAZARD,
+      {
+        x: data.x,
+        y: data.y,
+        width: data.width,
+        height: data.height,
+        path: data.path,
+        speed: data.speed,
+      },
+      theme.platformEdge ?? 0xff4d4d
+    );
+    wall.setDepth(DEPTH.HAZARDS);
+    wall.setAlpha(0.98);
+    wall.setTint(theme.platformEdge ?? 0xef4444);
+    group.add(wall);
+  });
+
   return group;
 }

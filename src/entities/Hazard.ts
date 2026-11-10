@@ -9,6 +9,32 @@ export function createHazards(
   const group = scene.physics.add.staticGroup();
 
   for (const hazard of hazards) {
+    if (hazard.type === 'pulse') {
+      const sprite = group.create(
+        hazard.x,
+        hazard.y,
+        ASSETS.PULSE_WALL
+      ) as Phaser.Physics.Arcade.Sprite;
+      sprite.setDepth(DEPTH.HAZARDS);
+      sprite.setDisplaySize(hazard.width ?? 110, hazard.height ?? 18);
+      sprite.setOrigin(0.5, 0.5);
+      sprite.setAlpha(0.7);
+      sprite.refreshBody();
+
+      scene.tweens.add({
+        targets: sprite,
+        alpha: { from: 0.35, to: 1 },
+        scaleX: { from: 0.96, to: 1.05 },
+        duration: hazard.activeTime ?? 700,
+        hold: hazard.inactiveTime ?? 400,
+        yoyo: true,
+        repeat: -1,
+        delay: hazard.phase ?? 0,
+        ease: 'Sine.easeInOut',
+      });
+      continue;
+    }
+
     if (hazard.type !== 'spike') continue;
 
     let key: string;

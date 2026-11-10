@@ -74,7 +74,11 @@ export class TouchControls {
 
     const circle = this.scene.add.circle(0, 0, radius, COLORS.PRIMARY_PURPLE, 0.45);
     circle.setStrokeStyle(2, COLORS.NEON_CYAN, 0.8);
-    circle.setInteractive({ useHandCursor: true });
+    circle.setInteractive({
+      useHandCursor: true,
+      hitArea: new Phaser.Geom.Circle(0, 0, radius + 10),
+      hitAreaCallback: Phaser.Geom.Circle.Contains,
+    });
 
     const fontSize = label.length > 2 ? '18px' : '26px';
     const text = this.scene.add.text(0, 0, label, {
@@ -84,18 +88,22 @@ export class TouchControls {
     });
     text.setOrigin(0.5);
 
-    circle.on('pointerdown', () => {
-      circle.setFillStyle(COLORS.NEON_CYAN, 0.7);
-      onDown();
-    });
-
     const release = () => {
       circle.setFillStyle(COLORS.PRIMARY_PURPLE, 0.45);
       onUp();
     };
 
+    circle.on('pointerdown', () => {
+      circle.setFillStyle(COLORS.NEON_CYAN, 0.7);
+      onDown();
+    });
+
     circle.on('pointerup', release);
-    circle.on('pointerout', release);
+    circle.on('pointerupoutside', release);
+    circle.on('pointerout', () => {
+      circle.setFillStyle(COLORS.PRIMARY_PURPLE, 0.45);
+      onUp();
+    });
 
     btnContainer.add([circle, text]);
     return btnContainer;

@@ -8,13 +8,21 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   create(): void {
-    // 1. Loading UI
+    const bg = this.add.graphics();
+    bg.fillGradientStyle(0x120d26, 0x120d26, 0x081923, 0x081923, 1);
+    bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    const glow = this.add.graphics();
+    glow.fillStyle(0x7c3aed, 0.2);
+    glow.fillCircle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 180);
+
     const titleText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, 'FLIP THE RULE', {
       fontFamily: FONTS.HEADING,
       fontSize: '52px',
       color: COLORS_STR.WHITE,
       stroke: COLORS_STR.PRIMARY_PURPLE,
       strokeThickness: 8,
+      shadow: { offsetX: 0, offsetY: 0, color: '#a78bfa', blur: 18, stroke: true, fill: true },
     }).setOrigin(0.5);
 
     const loadingText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30, 'Loading...', {
@@ -46,31 +54,39 @@ export class PreloadScene extends Phaser.Scene {
     // a) PLAYER texture (32x32)
     if (!this.textures.exists(ASSETS.PLAYER)) {
       const g = this.make.graphics({ x: 0, y: 0 });
-      // Base shadow / outer ring
-      g.fillStyle(COLORS.DARK_PURPLE, 1);
-      g.fillCircle(16, 16, 14);
-      // Main body
-      g.fillStyle(COLORS.PRIMARY_PURPLE, 1);
-      g.fillCircle(16, 16, 13);
-      // Gradient / specular highlight
-      g.fillStyle(COLORS.LIGHT_PURPLE, 0.45);
-      g.fillCircle(13, 13, 6);
-      g.fillStyle(0xffffff, 0.6);
-      g.fillCircle(12, 12, 2.5);
 
-      // Eyes (white)
-      g.fillStyle(0xffffff, 1);
-      g.fillCircle(12, 14, 2.8);
-      g.fillCircle(20, 14, 2.8);
-      // Pupils
-      g.fillStyle(0x1e1b4b, 1);
-      g.fillCircle(13, 14, 1.4);
-      g.fillCircle(21, 14, 1.4);
+      // Outer glow
+      g.fillStyle(0x1e1b4b, 0.9);
+      g.fillCircle(16, 16, 16);
+
+      // Main orb body with neon purple core
+      g.fillStyle(0x2d106d, 1);
+      g.fillCircle(16, 16, 14);
+      g.fillStyle(0x7c3aed, 1);
+      g.fillCircle(16, 16, 12.5);
+
+      // Inner glow highlight
+      g.fillStyle(0xa78bfa, 0.7);
+      g.fillCircle(12, 11.5, 6.5);
+      g.fillStyle(0xf8fafc, 0.9);
+      g.fillCircle(11.8, 11.2, 2.6);
+
+      // Shine ring
+      g.lineStyle(2.2, 0x67e8f9, 0.8);
+      g.strokeCircle(16, 16, 13.5);
+
+      // Eyes
+      g.fillStyle(0xf8fafc, 1);
+      g.fillCircle(12.5, 15, 2.8);
+      g.fillCircle(19.5, 15, 2.8);
+      g.fillStyle(0x1f163a, 1);
+      g.fillCircle(13, 15, 1.4);
+      g.fillCircle(20, 15, 1.4);
 
       // Smile
       g.lineStyle(1.8, 0xffffff, 1);
       g.beginPath();
-      g.arc(16, 16, 4.5, 0.15 * Math.PI, 0.85 * Math.PI, false);
+      g.arc(16, 18.5, 4.2, 0.2 * Math.PI, 0.8 * Math.PI, false);
       g.strokePath();
 
       g.generateTexture(ASSETS.PLAYER, 32, 32);
@@ -80,24 +96,22 @@ export class PreloadScene extends Phaser.Scene {
     // b) PLAYER_DEAD texture (32x32)
     if (!this.textures.exists(ASSETS.PLAYER_DEAD)) {
       const g = this.make.graphics({ x: 0, y: 0 });
-      // Darker / bruised body
+
+      g.fillStyle(0x1e1b4b, 0.9);
+      g.fillCircle(16, 16, 16);
       g.fillStyle(0x3b1d60, 1);
       g.fillCircle(16, 16, 14);
-      g.fillStyle(0x581c87, 1);
-      g.fillCircle(16, 16, 13);
+      g.fillStyle(0x7f1d1d, 1);
+      g.fillCircle(16, 16, 12.5);
 
-      // X eyes
-      g.lineStyle(1.8, 0xffffff, 1);
-      // Left X
-      g.lineBetween(10, 12, 14, 16);
-      g.lineBetween(10, 16, 14, 12);
-      // Right X
-      g.lineBetween(18, 12, 22, 16);
-      g.lineBetween(18, 16, 22, 12);
+      g.lineStyle(2, 0xf8fafc, 1);
+      g.lineBetween(10, 11, 14, 15);
+      g.lineBetween(10, 15, 14, 11);
+      g.lineBetween(18, 11, 22, 15);
+      g.lineBetween(18, 15, 22, 11);
 
-      // Frown
       g.beginPath();
-      g.arc(16, 23, 4, 1.15 * Math.PI, 1.85 * Math.PI, false);
+      g.arc(16, 21.5, 4.2, 1.2 * Math.PI, 1.8 * Math.PI, false);
       g.strokePath();
 
       g.generateTexture(ASSETS.PLAYER_DEAD, 32, 32);
@@ -142,21 +156,16 @@ export class PreloadScene extends Phaser.Scene {
     // d) SPIKE_UP texture (30x30)
     if (!this.textures.exists(ASSETS.SPIKE_UP)) {
       const g = this.make.graphics({ x: 0, y: 0 });
-      g.fillStyle(COLORS.DANGER_RED, 1);
-      g.beginPath();
-      g.moveTo(15, 2);
-      g.lineTo(28, 28);
-      g.lineTo(2, 28);
-      g.closePath();
-      g.fillPath();
-
-      // Outer glow / edge line
-      g.lineStyle(1.8, 0xf87171, 0.9);
-      g.strokePath();
-
-      // Inner highlight
-      g.lineStyle(1.2, 0xffffff, 0.5);
-      g.lineBetween(15, 6, 15, 26);
+      g.fillStyle(0x3f0d13, 1);
+      g.fillTriangle(15, 2, 28, 28, 2, 28);
+      g.fillGradientStyle(0x7f1d1d, 0x7f1d1d, 0xf87171, 0xfca5a5, 1);
+      g.fillTriangle(15, 5, 25, 25, 5, 25);
+      g.fillStyle(0xfff1f2, 0.68);
+      g.fillTriangle(15, 8, 18, 22, 11, 22);
+      g.lineStyle(2, 0xfecaca, 0.9);
+      g.strokeTriangle(15, 2, 28, 28, 2, 28);
+      g.lineStyle(1.2, 0xffffff, 0.55);
+      g.lineBetween(15, 8, 15, 23);
 
       g.generateTexture(ASSETS.SPIKE_UP, 30, 30);
       g.destroy();
@@ -165,19 +174,16 @@ export class PreloadScene extends Phaser.Scene {
     // e) SPIKE_DOWN texture (30x30)
     if (!this.textures.exists(ASSETS.SPIKE_DOWN)) {
       const g = this.make.graphics({ x: 0, y: 0 });
-      g.fillStyle(COLORS.DANGER_RED, 1);
-      g.beginPath();
-      g.moveTo(15, 28);
-      g.lineTo(2, 2);
-      g.lineTo(28, 2);
-      g.closePath();
-      g.fillPath();
-
-      g.lineStyle(1.8, 0xf87171, 0.9);
-      g.strokePath();
-
-      g.lineStyle(1.2, 0xffffff, 0.5);
-      g.lineBetween(15, 24, 15, 4);
+      g.fillStyle(0x3f0d13, 1);
+      g.fillTriangle(15, 28, 2, 2, 28, 2);
+      g.fillGradientStyle(0x7f1d1d, 0x7f1d1d, 0xf87171, 0xfca5a5, 1);
+      g.fillTriangle(15, 24, 5, 5, 25, 5);
+      g.fillStyle(0xfff1f2, 0.68);
+      g.fillTriangle(15, 21, 18, 8, 11, 8);
+      g.lineStyle(2, 0xfecaca, 0.9);
+      g.strokeTriangle(15, 28, 2, 2, 28, 2);
+      g.lineStyle(1.2, 0xffffff, 0.55);
+      g.lineBetween(15, 23, 15, 6);
 
       g.generateTexture(ASSETS.SPIKE_DOWN, 30, 30);
       g.destroy();
@@ -186,46 +192,77 @@ export class PreloadScene extends Phaser.Scene {
     // f) SPIKE_LEFT texture (30x30)
     if (!this.textures.exists(ASSETS.SPIKE_LEFT)) {
       const g = this.make.graphics({ x: 0, y: 0 });
-      g.fillStyle(COLORS.DANGER_RED, 1);
-      g.beginPath();
-      g.moveTo(2, 15);
-      g.lineTo(28, 2);
-      g.lineTo(28, 28);
-      g.closePath();
-      g.fillPath();
-
-      g.lineStyle(1.8, 0xf87171, 0.9);
-      g.strokePath();
-
-      g.lineStyle(1.2, 0xffffff, 0.5);
-      g.lineBetween(6, 15, 26, 15);
+      g.fillStyle(0x3f0d13, 1);
+      g.fillTriangle(2, 15, 28, 2, 28, 28);
+      g.fillGradientStyle(0x7f1d1d, 0x7f1d1d, 0xf87171, 0xfca5a5, 1);
+      g.fillTriangle(5, 15, 25, 6, 25, 24);
+      g.fillStyle(0xfff1f2, 0.68);
+      g.fillTriangle(8, 15, 21, 18, 21, 11);
+      g.lineStyle(2, 0xfecaca, 0.9);
+      g.strokeTriangle(2, 15, 28, 2, 28, 28);
+      g.lineStyle(1.2, 0xffffff, 0.55);
+      g.lineBetween(8, 15, 22, 15);
 
       g.generateTexture(ASSETS.SPIKE_LEFT, 30, 30);
       g.destroy();
     }
 
-    // f) SPIKE_RIGHT texture (30x30)
+    // g) SPIKE_RIGHT texture (30x30)
     if (!this.textures.exists(ASSETS.SPIKE_RIGHT)) {
       const g = this.make.graphics({ x: 0, y: 0 });
-      g.fillStyle(COLORS.DANGER_RED, 1);
-      g.beginPath();
-      g.moveTo(28, 15);
-      g.lineTo(2, 28);
-      g.lineTo(2, 2);
-      g.closePath();
-      g.fillPath();
-
-      g.lineStyle(1.8, 0xf87171, 0.9);
-      g.strokePath();
-
-      g.lineStyle(1.2, 0xffffff, 0.5);
-      g.lineBetween(24, 15, 4, 15);
+      g.fillStyle(0x3f0d13, 1);
+      g.fillTriangle(28, 15, 2, 28, 2, 2);
+      g.fillGradientStyle(0x7f1d1d, 0x7f1d1d, 0xf87171, 0xfca5a5, 1);
+      g.fillTriangle(25, 15, 5, 6, 5, 24);
+      g.fillStyle(0xfff1f2, 0.68);
+      g.fillTriangle(22, 15, 9, 18, 9, 11);
+      g.lineStyle(2, 0xfecaca, 0.9);
+      g.strokeTriangle(28, 15, 2, 28, 2, 2);
+      g.lineStyle(1.2, 0xffffff, 0.55);
+      g.lineBetween(22, 15, 8, 15);
 
       g.generateTexture(ASSETS.SPIKE_RIGHT, 30, 30);
       g.destroy();
     }
 
-    // g) STAR texture (24x24)
+    // h) MOVING_HAZARD texture (64x24)
+    if (!this.textures.exists(ASSETS.MOVING_HAZARD)) {
+      const g = this.make.graphics({ x: 0, y: 0 });
+      g.fillStyle(0x3f0d13, 1);
+      g.fillRoundedRect(0, 0, 64, 24, 8);
+      g.fillGradientStyle(0x7f1d1d, 0x7f1d1d, 0xef4444, 0xfca5a5, 1);
+      g.fillRoundedRect(2, 2, 60, 20, 6);
+      g.fillStyle(0xfef2f2, 0.3);
+      g.fillRoundedRect(6, 4, 52, 6, 4);
+      g.lineStyle(2, 0xfecaca, 0.85);
+      g.strokeRoundedRect(2, 2, 60, 20, 6);
+      g.lineStyle(1.3, 0xfff7ed, 0.45);
+      g.lineBetween(12, 18, 52, 18);
+      g.fillStyle(0x3f0d13, 0.6);
+      g.fillRoundedRect(8, 14, 48, 4, 2);
+
+      g.generateTexture(ASSETS.MOVING_HAZARD, 64, 24);
+      g.destroy();
+    }
+
+    // i) PULSE_WALL texture (160x20)
+    if (!this.textures.exists(ASSETS.PULSE_WALL)) {
+      const g = this.make.graphics({ x: 0, y: 0 });
+      g.fillStyle(0x2a0b11, 1);
+      g.fillRoundedRect(0, 0, 160, 20, 8);
+      g.fillGradientStyle(0x7f1d1d, 0x7f1d1d, 0xef4444, 0xfca5a5, 1);
+      g.fillRoundedRect(4, 2, 152, 16, 6);
+      g.fillStyle(0xfef2f2, 0.24);
+      g.fillRoundedRect(12, 5, 136, 4, 2);
+      g.lineStyle(2, 0xfecaca, 0.9);
+      g.strokeRoundedRect(4, 2, 152, 16, 6);
+      g.fillStyle(0xfff7ed, 0.8);
+      g.fillRect(66, 8, 28, 2);
+      g.generateTexture(ASSETS.PULSE_WALL, 160, 20);
+      g.destroy();
+    }
+
+    // j) STAR texture (24x24)
     if (!this.textures.exists(ASSETS.STAR)) {
       const g = this.make.graphics({ x: 0, y: 0 });
       const cx = 12;

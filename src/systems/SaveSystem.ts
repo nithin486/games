@@ -1,4 +1,4 @@
-import { SAVE_KEY, SAVE_VERSION } from '../config/constants';
+import { SAVE_KEY, SAVE_VERSION, TOTAL_LEVELS } from '../config/constants';
 import { GameSettings, SaveData, Difficulty } from '../config/types';
 
 export class SaveSystem {
@@ -11,7 +11,7 @@ export class SaveSystem {
   private getDefaultSaveData(): SaveData {
     return {
       version: SAVE_VERSION,
-      unlockedLevel: 1,
+      unlockedLevel: TOTAL_LEVELS,
       stars: {},
       bestScores: {},
       bestTimes: {},
@@ -40,15 +40,19 @@ export class SaveSystem {
         return this.getDefaultSaveData();
       }
 
+      const defaultData = this.getDefaultSaveData();
+      const unlockedLevel = Math.max(parsed.unlockedLevel ?? 1, TOTAL_LEVELS);
+
       return {
-        ...this.getDefaultSaveData(),
+        ...defaultData,
         ...parsed,
+        unlockedLevel,
         stars: parsed.stars ?? {},
         bestScores: parsed.bestScores ?? {},
         bestTimes: parsed.bestTimes ?? {},
         bestFlips: parsed.bestFlips ?? {},
         settings: {
-          ...this.getDefaultSaveData().settings,
+          ...defaultData.settings,
           ...(parsed.settings ?? {}),
         },
       };
